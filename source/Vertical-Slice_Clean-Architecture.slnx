@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Vertical-Slice_Clean-Architecture.Domain/Vertical-Slice_Clean-Architecture.Domain.csproj" Id="e10d77d5-3841-47d7-88e2-c263aab4e9a0" />
+  <Project Path="Vertical-Slice_Clean-Architecture.Infrastructure/Vertical-Slice_Clean-Architecture.Infrastructure.csproj" Id="027c373b-e564-465d-b0ce-9e19542ddac2" />
+  <Project Path="Vertical-Slice_Clean-Architecture.Presenetation.API/Vertical-Slice_Clean-Architecture.Presenetation.API.csproj" Id="2f2f6430-f02b-4990-acb2-0dfe470c576b" />
+</Solution>

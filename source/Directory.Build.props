@@ -1,0 +1,79 @@
+<Project>
+  <PropertyGroup>    
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsTestProject>false</IsTestProject>
+    <IsPublishable>true</IsPublishable>
+    <ProjectKey Condition="'$(ProjectKey)'==''">Vertical_Slice-Clean_Architecture</ProjectKey>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+  </PropertyGroup>
+  <!--
+    Semantic versioning (https://semver.org) via MinVer (https://github.com/adamralph/minver).
+    The version comes entirely from git tags. There are no version numbers to edit anywhere
+    in the solution.
+
+      * A commit tagged v1.4.0 builds as 1.4.0.
+      * Commits after that tag build as 1.4.1-alpha.0.{height}, where {height} is the number
+        of commits since the tag, so every build has a unique, correctly ordered version.
+      * A pre-release tag such as v1.5.0-rc.1 builds as 1.5.0-rc.1, and commits after it
+        build as 1.5.0-rc.1.{height}.
+      * With no tags at all, versions start from MinVerMinimumMajorMinor (2.0.0-alpha.0.{height}).
+
+    MinVer sets Version and PackageVersion to the full SemVer 2.0 version,
+    InformationalVersion to the same plus build metadata (the .NET SDK appends the commit SHA),
+    FileVersion to {Major}.{Minor}.{Patch}.0, and AssemblyVersion to {Major}.0.0.0 so binding
+    redirects only change on breaking releases.
+
+    Builds without git history (e.g. Docker builds, whose context excludes .git) should pass
+    the version explicitly: -p:MinVerVersionOverride=1.4.0 (see the Dockerfiles and README).
+  -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>2.0</MinVerMinimumMajorMinor>
+    <MinVerDefaultPreReleaseIdentifiers></MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="8.0.0" PrivateAssets="all" />
+  </ItemGroup>
+  <!--
+    MinVer warns (MINVER1001) when the solution isn't inside a git working directory, which
+    TreatWarningsAsErrors would turn into a failed build. That is the normal state of a solution
+    freshly generated from the template, before `git init`. When no .git exists at the solution root
+    or one level up (the repo layout, where the solution lives in source/), the warning is demoted to
+    a message and the version falls back to {MinVerMinimumMajorMinor}.0-alpha.0 (2.0.0-alpha.0). Once .git exists, the warning is active again.
+  -->
+  <PropertyGroup Condition="!Exists('$(MSBuildThisFileDirectory).git') And !Exists('$(MSBuildThisFileDirectory)../.git')">
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MINVER1001</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!--Enabled Dynamic Compile Flags from CI-->
+    <DefineConstants Condition=" '$(CompileFlags)' != '' ">$(CompileFlags);$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- included in assembly meta to access via reflection -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="$(ProjectKey) != ''">
+      <_Parameter1>ProjectKey</_Parameter1>
+      <_Parameter2>$(ProjectKey)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CompileTimestampUtc</_Parameter1>
+      <_Parameter2>$([System.DateTime]::UtcNow.ToString())</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="$(Configuration) != ''">
+      <_Parameter1>Configuration</_Parameter1>
+      <_Parameter2>$(Configuration)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="$(EnvironmentName) != ''">
+      <_Parameter1>EnvironmentName</_Parameter1>
+      <_Parameter2>$(EnvironmentName)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <!--<PackageReference>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <ProjectReference>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>-->
+  </ItemDefinitionGroup>
+</Project>
