@@ -1,0 +1,1 @@
+# Vertical_Slice-Clean_Architecture.Template
