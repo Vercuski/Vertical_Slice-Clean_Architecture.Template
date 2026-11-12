@@ -176,15 +176,21 @@ jobs:
           set -euo pipefail
           npm install --global @anthropic-ai/claude-code
           PROMPT=$(printf 'Current version: %s\nChange range: %s..HEAD\n%s' "$CUR_VERSION" "$BASE" "$INSTRUCTIONS")
+          # The result goes to a file outside the workspace (Claude can read the workspace), and the
+          # exit code is captured instead of letting set -e end the step before the error is shown.
+          result_file="$RUNNER_TEMP/claude-result.json"
+          status=0
           claude -p "$PROMPT" \
-            --max-turns 15 \
+            --max-turns 25 \
             --allowedTools "Read,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)" \
             --output-format json \
-            --json-schema "$SCHEMA" > claude-result.json
-          structured=$(jq -c '.structured_output // empty' claude-result.json)
-          if [ -z "$structured" ]; then
-            echo "::error::Claude returned no structured output."
-            jq '{subtype, is_error, result}' claude-result.json || cat claude-result.json
+            --json-schema "$SCHEMA" > "$result_file" || status=$?
+
+          structured=$(jq -c '.structured_output // empty' "$result_file" 2>/dev/null || true)
+          if [ "$status" -ne 0 ] || [ -z "$structured" ]; then
+            echo "::error::Claude Code exited with $status and returned no usable structured output."
+            # subtype explains the failure, e.g. error_max_turns or error_during_execution.
+            jq '{subtype, is_error, num_turns, result, errors}' "$result_file" 2>/dev/null || cat "$result_file"
             exit 1
           fi
           echo "structured_output=$structured" >> "$GITHUB_OUTPUT"
