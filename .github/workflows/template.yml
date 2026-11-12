@@ -1,8 +1,7 @@
-# Packs the `dotnet new` template (template/Vertical-Slice_Clean-Architecture.Tempate.csproj) and verifies that a
-# representative set of option combinations each generates a solution that builds with zero warnings,
-# passes its tests, leaks no template identity, and keeps its solution file consistent with disk.
-# The all-on case also guards against the template solution drifting from source/ONIONARCH.sln.
-# See template/verify-template.sh for the individual checks.
+# Packs the `dotnet new` template (template/Vercuski.Vertical_Slice-Clean_Architecture.Templates.csproj)
+# and verifies that the generated solution builds with zero warnings, passes its tests, leaks no
+# template identity, keeps its solution file consistent with disk, and has not drifted from
+# source/Vertical-Slice_Clean-Architecture.slnx. See template/verify-template.sh for the individual checks.
 name: Template
 
 on:
@@ -29,7 +28,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Pack template
-        run: dotnet pack template/Vertical-Slice_Clean-Architecture.Tempate.csproj --configuration Release --output artifacts
+        run: dotnet pack template/Vercuski.Vertical_Slice-Clean_Architecture.Templates.csproj --configuration Release --output artifacts
 
       - name: Upload template package
         uses: actions/upload-artifact@v7
@@ -42,37 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # The template has no options yet, so there is one case. When template.json gains symbols,
+      # add a matrix entry per representative combination: { case: <name>, options: <dotnet new args> }.
       matrix:
         include:
           - case: defaults
             options: ''
-          - case: web-postgres
-            options: --api false --web true --database PostgreSql
-          - case: console-mysql-nodocker
-            options: --api false --console true --database MySql --docker false
-          - case: nohost-fallback-mysql
-            options: --api false --database MySql --quality-tooling true
-          - case: api-web-all-nodocker
-            options: --web true --database All --docker false
-          - case: console-postgres-notests
-            options: --api false --console true --database PostgreSql --tests false
-          - case: web-console-sqlserver
-            options: --api false --web true --console true
-          - case: dapper-mysql
-            options: --data-access Dapper --database MySql
-          - case: efcore-mysql-nosamples
-            options: --data-access EfCore --database MySql --samples false
-          - case: dapper-all-nosamples-web
-            options: --data-access Dapper --database All --samples false --web true
-          - case: efcore-postgres-console
-            options: --data-access EfCore --database PostgreSql --api false --console true
-          - case: nosamples-sqlserver
-            options: --samples false
-          - case: minimal-dapper
-            options: --data-access Dapper --samples false --tests false --docker false
-          - case: all-on
-            options: --web true --console true --database All --quality-tooling true
-            reference: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -92,8 +66,6 @@ jobs:
         run: dotnet new install artifacts/*.nupkg
 
       - name: Verify ${{ matrix.case }}
-        env:
-          VERIFY_EXPECT_REFERENCE_PROJECTS: ${{ matrix.reference || 'false' }}
         # Invoked through bash so the check does not depend on the executable bit, which commits
         # made on Windows (core.fileMode=false) do not preserve.
         run: bash template/verify-template.sh ${{ matrix.case }} ${{ matrix.options }}

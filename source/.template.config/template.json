@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Scott Vercuski",
+  "classifications": [
+    "Web",
+    "API",
+    "Vertical Slice Architecture",
+    "Clean Architecture"
+  ],
+  "identity": "Vercuski.Vertical_Slice-Clean_Architecture.Solution",
+  "groupIdentity": "Vercuski.Vertical_Slice-Clean_Architecture",
+  "name": "Vertical Slice + Clean Architecture Solution",
+  "description": "A .NET 10 Minimal API solution that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers, with EF Core and FluentValidation.",
+  "shortName": [
+    "vsca",
+    "Vertical_Slice-Clean_Architecture"
+  ],
+  "sourceName": "Vertical-Slice_Clean-Architecture",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "solution",
+    "editorTreatAs": "solution"
+  },
+  "symbols": {
+    "ProjectKeyReplacement": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "identity",
+      "replaces": "Vertical_Slice-Clean_Architecture",
+      "description": "Replaces the MinVer ProjectKey in Directory.Build.props, which uses the repository's spelling of the name rather than sourceName."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/[Bb]in/**",
+            "**/[Oo]bj/**",
+            "**/.vs/**",
+            "**/*.user",
+            "**/TestResults/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "postActions": []
+}

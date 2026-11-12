@@ -3,11 +3,11 @@
 # repository, where GitHub renders it directly:
 #
 #   https://github.com/Vercuski/RepoDocumentation/tree/main/<this repo's name>/
-#     README.md   landing page (from Documentation/DocFX/landing-page.md)
+#     README.md   landing page (from documentation/docfx/landing-page.md)
 #     api/*.md    one page per namespace and type
-#     images/     copied from Documentation/Images
+#     images/     copied from documentation/images (optional)
 #
-# The DocFX configuration and the post-processor live in Documentation/DocFX. To generate the same
+# The DocFX configuration and the post-processor live in documentation/docfx. To generate the same
 # output locally, run the two commands from the "Generate" steps below in that folder.
 #
 # One-time setup: the default GITHUB_TOKEN cannot write to another repository, so this workflow
@@ -62,14 +62,14 @@ jobs:
       # straight from the source; "outputFormat": "markdown" writes one .md page per namespace and
       # type to api/. --warningsAsErrors matches the solution's TreatWarningsAsErrors policy.
       - name: Generate Markdown API pages
-        working-directory: Documentation/DocFX
+        working-directory: documentation/docfx
         run: docfx metadata docfx.json --warningsAsErrors
 
       # DocFX's Markdown output leaves <see cref="..."/> references as raw <xref> tags, which
       # GitHub renders as blank text. PostProcess.cs (a .NET 10 file-based app) turns them into
       # links, adds the README.md landing page and images, and fails on any broken link or anchor.
       - name: Resolve cross-references and assemble output
-        working-directory: Documentation/DocFX
+        working-directory: documentation/docfx
         run: dotnet run PostProcess.cs
 
       - name: Checkout documentation repository
@@ -92,7 +92,7 @@ jobs:
           # Mirror the site into this repo's folder only; --delete removes pages for types that no
           # longer exist. Other repositories' folders are never touched.
           mkdir -p "docs-repo/$TARGET_DIR"
-          rsync -a --delete Documentation/DocFX/_site/ "docs-repo/$TARGET_DIR/"
+          rsync -a --delete documentation/docfx/_site/ "docs-repo/$TARGET_DIR/"
 
           cd docs-repo
           git config user.name "github-actions[bot]"

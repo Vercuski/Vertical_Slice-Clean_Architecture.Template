@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Packs source/ (including source/.template.config) as a `dotnet new` template package.
+      dotnet pack template/Vercuski.Vertical_Slice-Clean_Architecture.Templates.csproj -c Release -o artifacts
+      dotnet new install artifacts/Vercuski.Vertical_Slice-Clean_Architecture.Templates.<version>.nupkg
+      dotnet new vsca -n MyCompany.MyProduct
+    Installed template packages also appear in Visual Studio's New Project dialog.
+    Drop_and_Recreate_Template.ps1 (repository root) runs this uninstall / pack / install cycle locally.
+
+    The package version comes from MinVer, configured in source/Directory.Build.props and imported
+    through template/Directory.Build.props, so the template and the solution share one Semantic Version.
+  -->
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>Vercuski.Vertical_Slice-Clean_Architecture.Templates</PackageId>
+    <Title>Vertical Slice + Clean Architecture Solution Template</Title>
+    <Authors>Scott Vercuski</Authors>
+    <Description>A .NET 10 Minimal API solution template that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers, with EF Core and FluentValidation.</Description>
+    <PackageTags>dotnet-new;templates;vertical-slice-architecture;clean-architecture;minimal-api</PackageTags>
+    <PackageProjectUrl>https://github.com/Vercuski/Vertical_Slice-Clean_Architecture.Template</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Vercuski/Vertical_Slice-Clean_Architecture.Template</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <!-- Keep dot-files and dot-folders (.template.config, .dockerignore) that pack skips by default. -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <!-- NU5128: no lib/ folder is expected for a content-only template package. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\source\**\*"
+             Exclude="..\source\**\bin\**;..\source\**\obj\**;..\source\**\.vs\**;..\source\**\*.user;..\source\**\TestResults\**"
+             PackagePath="content" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>

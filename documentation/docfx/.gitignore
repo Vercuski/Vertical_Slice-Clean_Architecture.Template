@@ -1,0 +1,3 @@
+# DocFX output: generated metadata and the built site are CI artifacts, not source.
+/api/
+/_site/

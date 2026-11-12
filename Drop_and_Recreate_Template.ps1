@@ -11,7 +11,7 @@
       4. Uninstalls any "folder install" of .\source.
       5. Packs template\Vercuski.Vertical_Slice-Clean_Architecture.Templates.csproj into .\artifacts.
       6. Installs the newest .nupkg found in .\artifacts.
-      7. Prints the template's help so you can confirm the --data-access option is listed.
+      7. Prints the template's help (short name: vsca) so you can confirm the install worked.
 
     Uninstall steps print an error if there is nothing to uninstall; this is expected.
 
@@ -63,7 +63,7 @@ dotnet new install (Get-ChildItem artifacts\Vercuski.Vertical_Slice-Clean_Archit
 
 echo ""
 echo ""
-echo "*********************************************************************************************************"
-echo "* Test if new template s installed you should see '-da, --data-access <Both|Dapper|EfCore>' in the text *"
-echo "*********************************************************************************************************"
-dotnet new Vertical_Slice-Clean_Architecture --help   # should list:  -da, --data-access <Both|Dapper|EfCore>
+echo "*************************************************************************************************"
+echo "* Test if the new template is installed: you should see 'Vertical Slice + Clean Architecture Solution' *"
+echo "*************************************************************************************************"
+dotnet new vsca --help   # should print the template's name and the common dotnet new options
