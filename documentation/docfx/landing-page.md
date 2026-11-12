@@ -24,8 +24,8 @@ in the source code. Entry points by layer:
 |----------------|-----------|
 | Domain         | [Abstractions](api/Vertical_Slice_Clean_Architecture.Domain.Abstractions.md), [Entities](api/Vertical_Slice_Clean_Architecture.Domain.Entities.md) |
 | Infrastructure | [Contexts](api/Vertical_Slice_Clean_Architecture.Infrastructure.Contexts.md) |
-| Presentation (API): slice infrastructure | [Common](api/Vertical_Slice_Clean_Architecture.Presenetation.API.Common.md) |
-| Presentation (API): feature slices | [Features.Sample](api/Vertical_Slice_Clean_Architecture.Presenetation.API.Features.Sample.md) |
+| Presentation (API): slice infrastructure | [Common](api/Vertical_Slice_Clean_Architecture.Presentation.API.Common.md) |
+| Presentation (API): feature slices | [Features.Sample](api/Vertical_Slice_Clean_Architecture.Presentation.API.Features.Sample.md) |
 
 ### All namespaces
 

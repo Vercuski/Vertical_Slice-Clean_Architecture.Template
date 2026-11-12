@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
 
-namespace Vertical_Slice_Clean_Architecture.Presenetation.API.Common;
+namespace Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
 /// <summary>
 /// Implemented by a feature slice to register its own HTTP route(s).

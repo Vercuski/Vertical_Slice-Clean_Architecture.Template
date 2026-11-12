@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vertical_Slice_Clean_Architecture.Domain.Entities;
 using Vertical_Slice_Clean_Architecture.Infrastructure.Contexts;
-using Vertical_Slice_Clean_Architecture.Presenetation.API.Common;
+using Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
-namespace Vertical_Slice_Clean_Architecture.Presenetation.API.Features.Sample;
+namespace Vertical_Slice_Clean_Architecture.Presentation.API.Features.Sample;
 
 /// <summary>
 /// Vertical slice for <c>POST /Sample</c>: accepts a <see cref="SampleEntity"/> and returns <c>201 Created</c>

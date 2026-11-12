@@ -1,0 +1,6 @@
+@Vertical_Slice_Clean_Architecture.Presentation.API_HostAddress = http://localhost:5210
+
+GET {{Vertical_Slice_Clean_Architecture.Presentation.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

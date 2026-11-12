@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Vertical_Slice_Clean_Architecture.Presenetation.API</RootNamespace>
+    <RootNamespace>Vertical_Slice_Clean_Architecture.Presentation.API</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

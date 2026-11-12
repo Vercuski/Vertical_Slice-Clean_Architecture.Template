@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Vertical_Slice_Clean_Architecture.Domain.Entities;
 using Vertical_Slice_Clean_Architecture.Infrastructure.Contexts;
-using Vertical_Slice_Clean_Architecture.Presenetation.API.Common;
+using Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
-namespace Vertical_Slice_Clean_Architecture.Presenetation.API.Features.Sample;
+namespace Vertical_Slice_Clean_Architecture.Presentation.API.Features.Sample;
 
 /// <summary>
 /// Vertical slice for <c>GET /Sample/{Id}</c>: returns a single <see cref="SampleEntity"/> by its identifier.
