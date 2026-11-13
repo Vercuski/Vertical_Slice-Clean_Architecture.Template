@@ -41,24 +41,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      # The template has no options yet, so there is one case. When template.json gains symbols,
-      # add a matrix entry per representative combination: { case: <name>, options: <dotnet new args> }.
-        matrix:
-            include:
-              - case: defaults
-                options: ''
-              - case: efcore-sqlserver
-                options: '--data-access EfCore --database SqlServer'
-              - case: efcore-postgresql
-                options: '--data-access EfCore --database PostgreSql'
-              - case: efcore-mysql
-                options: '--data-access EfCore --database MySql'
-              - case: dapper-sqlserver
-                options: '--data-access Dapper --database SqlServer'
-              - case: dapper-postgresql
-                options: '--data-access Dapper --database PostgreSql'
-              - case: dapper-mysql
-                options: '--data-access Dapper --database MySql'
+      # One entry per representative combination of template options: { case: <name>, options: <dotnet new args> }.
+      matrix:
+        include:
+          - case: defaults
+            options: ''
+          - case: efcore-sqlserver
+            options: '--data-access EfCore --database SqlServer'
+          - case: efcore-postgresql
+            options: '--data-access EfCore --database PostgreSql'
+          - case: efcore-mysql
+            options: '--data-access EfCore --database MySql'
+          - case: dapper-sqlserver
+            options: '--data-access Dapper --database SqlServer'
+          - case: dapper-postgresql
+            options: '--data-access Dapper --database PostgreSql'
+          - case: dapper-mysql
+            options: '--data-access Dapper --database MySql'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
