@@ -11,9 +11,10 @@
       ],
       "dest": "api",
       "outputFormat": "markdown",
-      "properties": {
-        "Configuration": "Release"
-      }
+	  "properties": {
+		  "Configuration": "Release",
+		  "UseRazorSourceGenerator": "false"
+	  }
     }
   ]
 }
