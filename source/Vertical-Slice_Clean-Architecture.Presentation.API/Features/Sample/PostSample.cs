@@ -1,110 +1,157 @@
+#if (HasDapper)
+using Dapper;
+#endif
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+#if (HasEfCore)
 using Microsoft.EntityFrameworkCore;
+#endif
 using Vertical_Slice_Clean_Architecture.Domain.Entities;
-using Vertical_Slice_Clean_Architecture.Infrastructure.Contexts;
+#if (HasDapper)
+using Vertical_Slice_Clean_Architecture.Infrastructure.Persistence.ConnectionFactory;
+#endif
+#if (HasEfCore)
+using Vertical_Slice_Clean_Architecture.Infrastructure.Persistence.Contexts;
+#endif
 using Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
 namespace Vertical_Slice_Clean_Architecture.Presentation.API.Features.Sample;
 
 /// <summary>
-/// Vertical slice for <c>POST /Sample</c>: accepts a <see cref="SampleEntity"/> and returns <c>201 Created</c>
-/// when an active sample with the same identifier already exists.
+/// Vertical slice for <c>POST /Sample</c>: creates a sample.
 /// </summary>
 /// <remarks>
-/// The slice's command, response, validator, handler and endpoint are nested in this one class.
+/// The slice's command, response, validator, handler and endpoint are nested in this one class. It
+/// writes to the command (write) side of the database. The request carries only what a client may
+/// choose; the identifier and the initial state come from <see cref="SampleEntity.Create"/>.
 /// </remarks>
 public static class PostSample
 {
     /// <summary>
-    /// Maximum number of lines per request. Not currently enforced by <see cref="Validator"/> or used elsewhere.
-    /// </summary>
-    public const int MaxLines = 50;
-
-    /// <summary>
-    /// Maximum quantity per line. Not currently enforced by <see cref="Validator"/> or used elsewhere.
-    /// </summary>
-    public const int MaxQuantityPerLine = 100;
-
-    /// <summary>
     /// The request body for this slice.
     /// </summary>
-    /// <param name="Sample">The sample being submitted.</param>
-    public sealed record Command(SampleEntity Sample);
+    /// <param name="Name">The display name of the new sample.</param>
+    /// <param name="Email">The email address of the new sample. It must not belong to another sample.</param>
+    public sealed record Command(string Name, string Email);
 
     /// <summary>
     /// The response body returned on success.
     /// </summary>
-    /// <param name="Id">The identifier of the sample.</param>
+    /// <param name="Id">The identifier the server assigned to the new sample.</param>
     public sealed record Response(Guid Id);
 
     /// <summary>
-    /// FluentValidation rules for <see cref="Command"/>, applied by <c>WithValidation&lt;Command&gt;()</c> before the handler runs.
+    /// FluentValidation rules for <see cref="Command"/>, applied by <c>WithValidation&lt;Command&gt;()</c>
+    /// before the handler runs. The length limits are the entity's, so they match the database mapping.
     /// </summary>
     public sealed class Validator : AbstractValidator<Command>
     {
         /// <summary>
-        /// Defines the rules: <see cref="SampleEntity.Id"/> must not be <see cref="Guid.Empty"/>.
+        /// Defines the rules: a <see cref="Command.Name"/> of at most <see cref="SampleEntity.NameMaxLength"/>
+        /// characters, and a valid <see cref="Command.Email"/> of at most <see cref="SampleEntity.EmailMaxLength"/> characters.
+        /// Each property stops at its first failure, so an empty email is reported once, as empty.
         /// </summary>
         public Validator()
         {
-            RuleFor(s => s.Sample.Id).NotEmpty();
+            RuleFor(c => c.Name).Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .MaximumLength(SampleEntity.NameMaxLength);
+            RuleFor(c => c.Email).Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .EmailAddress()
+                .MaximumLength(SampleEntity.EmailMaxLength);
         }
     }
 
+#if (HasDapper)
     /// <summary>
-    /// Processes a <see cref="Command"/> against <see cref="SampleDbContext"/>.
+    /// Inserts the sample with Dapper against the command database.
     /// </summary>
-    /// <param name="db">The database context to read from and save to.</param>
-    public sealed class Handler(SampleDbContext db) : ISliceHandler
+    /// <param name="connectionFactory">Creates connections to the command database.</param>
+    public sealed class Handler(IDbWriteConnectionFactory connectionFactory) : ISliceHandler
     {
         /// <summary>
-        /// Checks that an active sample with the submitted identifier exists, then saves pending changes.
+        /// Counts samples with the given email address. Identifiers are unquoted so the same SQL runs on every supported engine.
         /// </summary>
-        /// <param name="command">The command that holds the submitted sample.</param>
+        private const string EmailInUseSql = "SELECT COUNT(1) FROM Samples WHERE Email = @Email";
+
+        /// <summary>
+        /// Inserts one sample.
+        /// </summary>
+        private const string InsertSql = "INSERT INTO Samples (Id, Name, Email, IsActive) VALUES (@Id, @Name, @Email, @IsActive)";
+
+        /// <summary>
+        /// Creates the sample unless its email address is already in use.
+        /// </summary>
+        /// <param name="command">The command that holds the new sample's details.</param>
         /// <param name="cancellationToken">A token that cancels the database calls.</param>
         /// <returns>
-        /// <list type="bullet">
-        ///   <item><description><c>404 Not Found</c> with a problem body if no active sample with that identifier exists.</description></item>
-        ///   <item><description><c>409 Conflict</c> with a problem body if the save fails with a <see cref="DbUpdateConcurrencyException"/>.</description></item>
-        ///   <item><description>Otherwise <c>201 Created</c> with a <c>Location</c> of <c>/Sample/{Id}</c> and a <see cref="Response"/> body.</description></item>
-        /// </list>
+        /// <c>201 Created</c> with a <c>Location</c> of <c>/Sample/{Id}</c>, or <c>409 Conflict</c>
+        /// with a problem body if another sample already has the email address.
         /// </returns>
         /// <remarks>
-        /// The handler does not add <see cref="Command.Sample"/> to the context, so <c>SaveChangesAsync</c>
-        /// currently has nothing to save.
+        /// The check reads from the command database, not the query database, so it is not affected
+        /// by replication lag when the read side is a replica. Two requests racing with the same email
+        /// can both pass it; the unique index on <c>Email</c> then rejects the second insert.
         /// </remarks>
-        public async Task<Results<Created<Response>, NotFound<ProblemDetails>, Conflict<ProblemDetails>>> Handle(
+        public async Task<Results<Created<Response>, Conflict<ProblemDetails>>> Handle(
             Command command,
             CancellationToken cancellationToken)
         {
-            var customerIsActive = await db.Samples
-                .AnyAsync(c => c.Id == command.Sample.Id && c.IsActive, cancellationToken);
+            using var connection = connectionFactory.CreateConnection();
 
-            if (!customerIsActive)
+            var emailInUse = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(EmailInUseSql, new { command.Email }, cancellationToken: cancellationToken));
+            if (emailInUse > 0)
             {
-                return Problems.NotFound(
-                    "Sample not found",
-                    $"No active sample exists with id {command.Sample.Id}.");
+                return Problems.Conflict("Email already in use", $"Another sample already uses {command.Email}.");
             }
 
-            try
-            {
-                await db.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return Problems.Conflict(
-                    "Sample changed",
-                    "Sample changed. Retry the request.");
-            }
+            var sample = SampleEntity.Create(command.Name, command.Email);
+            await connection.ExecuteAsync(
+                new CommandDefinition(InsertSql, sample, cancellationToken: cancellationToken));
 
-            return TypedResults.Created(
-                $"/Sample/{command.Sample.Id}",
-                new Response(command.Sample.Id));
+            return TypedResults.Created($"/Sample/{sample.Id}", new Response(sample.Id));
         }
     }
+#else
+    /// <summary>
+    /// Adds the sample through <see cref="CommandDbContext"/>.
+    /// </summary>
+    /// <param name="db">The write-side database context.</param>
+    public sealed class Handler(CommandDbContext db) : ISliceHandler
+    {
+        /// <summary>
+        /// Creates the sample unless its email address is already in use.
+        /// </summary>
+        /// <param name="command">The command that holds the new sample's details.</param>
+        /// <param name="cancellationToken">A token that cancels the database calls.</param>
+        /// <returns>
+        /// <c>201 Created</c> with a <c>Location</c> of <c>/Sample/{Id}</c>, or <c>409 Conflict</c>
+        /// with a problem body if another sample already has the email address.
+        /// </returns>
+        /// <remarks>
+        /// Two requests racing with the same email can both pass the check; the unique index on
+        /// <c>Email</c> then rejects the second save.
+        /// </remarks>
+        public async Task<Results<Created<Response>, Conflict<ProblemDetails>>> Handle(
+            Command command,
+            CancellationToken cancellationToken)
+        {
+            if (await db.Samples.AnyAsync(s => s.Email == command.Email, cancellationToken))
+            {
+                return Problems.Conflict("Email already in use", $"Another sample already uses {command.Email}.");
+            }
+
+            var sample = SampleEntity.Create(command.Name, command.Email);
+            db.Samples.Add(sample);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return TypedResults.Created($"/Sample/{sample.Id}", new Response(sample.Id));
+        }
+    }
+#endif
 
     /// <summary>
     /// Registers the <c>POST /Sample</c> route for this slice.

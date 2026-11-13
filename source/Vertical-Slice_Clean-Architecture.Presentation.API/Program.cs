@@ -1,12 +1,24 @@
 // Application entry point (top-level statements): configures services and the HTTP pipeline, then runs the API.
-// Note: the vertical-slice wiring in Common/SliceInfrastructure.cs (AddSlices / MapSlices) and the
-// SampleDbContext registration are not called here yet, so the /Sample endpoints are not mapped.
+// AddInfrastructureRegistration() also registers persistence (connection strings and the data-access
+// services the slices use); AddSlices / MapSlices discover and map every feature slice.
+
+using System.Text.Json.Serialization;
+using Vertical_Slice_Clean_Architecture.Infrastructure;
+using Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddInfrastructureRegistration();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+// Every handler, endpoint and validator in the assembly.
+builder.Services.AddSlices(typeof(Program).Assembly);
 
 var app = builder.Build();
 
@@ -17,41 +29,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// The correlation ID middleware runs first, so error responses and every log entry carry the ID.
+app.UseCorrelationIdMiddleware();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.AddInfrastructureApplicationRegistration();
 app.UseHttpsRedirection();
 
-// Sample data for the default ASP.NET Core weather forecast endpoint below.
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-// GET /weatherforecast: returns five days of randomly generated forecasts, starting tomorrow.
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapSlices();
 
 app.Run();
-
-/// <summary>
-/// A single day's forecast returned by <c>GET /weatherforecast</c>.
-/// </summary>
-/// <param name="Date">The calendar date the forecast applies to.</param>
-/// <param name="TemperatureC">The temperature in degrees Celsius.</param>
-/// <param name="Summary">A one-word description of the weather, if any.</param>
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    /// <summary>
-    /// Gets the temperature in degrees Fahrenheit, converted from <see cref="TemperatureC"/> and truncated to an integer.
-    /// </summary>
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

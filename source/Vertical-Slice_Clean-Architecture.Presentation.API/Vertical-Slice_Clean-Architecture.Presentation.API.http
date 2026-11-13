@@ -1,6 +1,23 @@
-@Vertical_Slice_Clean_Architecture.Presentation.API_HostAddress = http://localhost:5210
+@HostAddress = http://localhost:5210
 
-GET {{Vertical_Slice_Clean_Architecture.Presentation.API_HostAddress}}/weatherforecast/
+### Create a sample (201 Created, or 409 Conflict if the email is already in use)
+# @name createSample
+POST {{HostAddress}}/Sample
+Content-Type: application/json
+
+{
+  "name": "Sample one",
+  "email": "sample.one@example.com"
+}
+
+### Get the sample just created (200 OK, or 404 Not Found)
+GET {{HostAddress}}/Sample/{{createSample.response.body.$.id}}
 Accept: application/json
 
-###
+### Readiness: runs every check, including the database (200, or 503 when unhealthy)
+GET {{HostAddress}}/health
+Accept: application/json
+
+### Liveness: runs no checks (200 whenever the process can serve requests)
+GET {{HostAddress}}/health/live
+Accept: application/json

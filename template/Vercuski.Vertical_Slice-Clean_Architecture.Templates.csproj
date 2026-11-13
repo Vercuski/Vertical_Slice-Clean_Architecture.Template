@@ -17,11 +17,14 @@
     <PackageId>Vercuski.Vertical_Slice-Clean_Architecture.Templates</PackageId>
     <Title>Vertical Slice + Clean Architecture Solution Template</Title>
     <Authors>Scott Vercuski</Authors>
-    <Description>A .NET 10 Minimal API solution template that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers, with EF Core and FluentValidation.</Description>
-    <PackageTags>dotnet-new;templates;vertical-slice-architecture;clean-architecture;minimal-api</PackageTags>
+    <Description>A .NET 10 Minimal API solution template that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers. Choose EF Core or Dapper on SQL Server, PostgreSQL or MySQL; includes FluentValidation, health checks, correlation IDs, structured logging and a Testcontainers-backed test project.</Description>
+    <PackageTags>dotnet-new;templates;vertical-slice-architecture;clean-architecture;minimal-api;ef-core;dapper;sql-server;postgresql;mysql</PackageTags>
     <PackageProjectUrl>https://github.com/Vercuski/Vertical_Slice-Clean_Architecture.Template</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Vercuski/Vertical_Slice-Clean_Architecture.Template</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- The same icon Visual Studio shows in the New Project dialog (source/.template.config/ide.host.json). -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <TargetFramework>net10.0</TargetFramework>
     <IncludeContentInPack>true</IncludeContentInPack>
@@ -38,6 +41,8 @@
     <Content Include="..\source\**\*"
              Exclude="..\source\**\bin\**;..\source\**\obj\**;..\source\**\.vs\**;..\source\**\*.user;..\source\**\TestResults\**"
              PackagePath="content" />
+    <None Include="..\source\.template.config\icon.png" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" Visible="false" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

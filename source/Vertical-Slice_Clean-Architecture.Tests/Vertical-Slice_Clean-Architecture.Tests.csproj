@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Vertical_Slice_Clean_Architecture.Tests</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Directory.Build.props marks every project as a publishable non-test project; this one is the exception. -->
+    <IsTestProject>true</IsTestProject>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="NUnit" Version="4.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Boots the real API host in memory for the host and database tests. -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.15" />
+    <!-- Architecture (dependency) rules. -->
+    <PackageReference Include="NetArchTest.Rules" Version="1.3.2" />
+    <!-- A real, in-process ADO.NET connection for the database health check unit tests. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />
+    <!-- Throwaway database server for the database integration tests (needs Docker). -->
+    <!--#if (HasSqlServer) -->
+    <PackageReference Include="Testcontainers.MsSql" Version="4.16.0" />
+    <!--#endif -->
+    <!--#if (HasPostgreSql) -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.16.0" />
+    <!--#endif -->
+    <!--#if (HasMySql) -->
+    <PackageReference Include="Testcontainers.MySql" Version="4.16.0" />
+    <!--#endif -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DisableTransitiveProjectReferences (Directory.Build.props) means every layer under test is referenced explicitly. -->
+    <ProjectReference Include="..\Vertical-Slice_Clean-Architecture.Domain\Vertical-Slice_Clean-Architecture.Domain.csproj" />
+    <ProjectReference Include="..\Vertical-Slice_Clean-Architecture.Infrastructure\Vertical-Slice_Clean-Architecture.Infrastructure.csproj" />
+    <ProjectReference Include="..\Vertical-Slice_Clean-Architecture.Presentation.API\Vertical-Slice_Clean-Architecture.Presentation.API.csproj" />
+  </ItemGroup>
+
+</Project>

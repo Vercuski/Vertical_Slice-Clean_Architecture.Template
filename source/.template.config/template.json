@@ -10,7 +10,7 @@
   "identity": "Vercuski.Vertical_Slice-Clean_Architecture.Solution",
   "groupIdentity": "Vercuski.Vertical_Slice-Clean_Architecture",
   "name": "Vertical Slice + Clean Architecture Solution",
-  "description": "A .NET 10 Minimal API solution that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers, with EF Core and FluentValidation.",
+  "description": "A .NET 10 Minimal API solution that organizes features as vertical slices (request, validator, handler and endpoint in one file) on top of Clean Architecture Domain and Infrastructure layers, with FluentValidation and a choice of EF Core or Dapper on SQL Server, PostgreSQL or MySQL.",
   "shortName": [
     "vsca",
     "Vertical_Slice-Clean_Architecture"
@@ -23,6 +23,69 @@
     "editorTreatAs": "solution"
   },
   "symbols": {
+    "DataAccess": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "EfCore",
+      "displayName": "ORM",
+      "description": "How the feature slices reach the database: EF Core (QueryDbContext and CommandDbContext) or Dapper (read and write connection factories).",
+      "choices": [
+        {
+          "choice": "EfCore",
+          "displayName": "EF Core",
+          "description": "Query and command DbContexts with fluent entity mappings and migrations support."
+        },
+        {
+          "choice": "Dapper",
+          "displayName": "Dapper",
+          "description": "Read and write connection factories for hand-written SQL."
+        }
+      ]
+    },
+    "Database": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "SqlServer",
+      "displayName": "Database engine",
+      "description": "The database engine the solution connects to. Only that engine's driver and provider are referenced.",
+      "choices": [
+        {
+          "choice": "SqlServer",
+          "displayName": "Microsoft SQL Server",
+          "description": "Microsoft.Data.SqlClient / Microsoft.EntityFrameworkCore.SqlServer"
+        },
+        {
+          "choice": "PostgreSql",
+          "displayName": "PostgreSQL",
+          "description": "Npgsql / Npgsql.EntityFrameworkCore.PostgreSQL"
+        },
+        {
+          "choice": "MySql",
+          "displayName": "MySQL / MariaDB",
+          "description": "MySqlConnector / Microting.EntityFrameworkCore.MySql"
+        }
+      ]
+    },
+    "HasEfCore": {
+      "type": "computed",
+      "value": "(DataAccess == \"EfCore\")"
+    },
+    "HasDapper": {
+      "type": "computed",
+      "value": "(DataAccess == \"Dapper\")"
+    },
+    "HasSqlServer": {
+      "type": "computed",
+      "value": "(Database == \"SqlServer\")"
+    },
+    "HasPostgreSql": {
+      "type": "computed",
+      "value": "(Database == \"PostgreSql\")"
+    },
+    "HasMySql": {
+      "type": "computed",
+      "value": "(Database == \"MySql\")"
+    },
     "ProjectKeyReplacement": {
       "type": "derived",
       "valueSource": "name",
@@ -42,9 +105,73 @@
             "**/*.user",
             "**/TestResults/**"
           ]
+        },
+        {
+          "condition": "(!HasEfCore)",
+          "exclude": [
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/Contexts/**",
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/Configurations/**"
+          ]
+        },
+        {
+          "condition": "(!HasDapper)",
+          "exclude": [
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/ConnectionFactory/**"
+          ]
+        },
+        {
+          "condition": "(!HasSqlServer)",
+          "exclude": [
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/Providers/SqlServerDatabaseProvider.cs"
+          ]
+        },
+        {
+          "condition": "(!HasPostgreSql)",
+          "exclude": [
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/Providers/PostgreSqlDatabaseProvider.cs"
+          ]
+        },
+        {
+          "condition": "(!HasMySql)",
+          "exclude": [
+            "Vertical-Slice_Clean-Architecture.Infrastructure/Persistence/Providers/MySqlDatabaseProvider.cs"
+          ]
         }
       ]
     }
   ],
+  "SpecialCustomOperations": {
+    "**/appsettings*.json": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true,
+            "evaluator": "C++"
+          }
+        },
+        {
+          "type": "replacement",
+          "configuration": {
+            "original": "//~",
+            "replacement": ""
+          }
+        }
+      ]
+    }
+  },
   "postActions": []
 }

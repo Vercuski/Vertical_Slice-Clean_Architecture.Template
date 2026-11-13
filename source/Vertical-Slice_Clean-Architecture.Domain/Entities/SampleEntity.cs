@@ -3,31 +3,85 @@ using Vertical_Slice_Clean_Architecture.Domain.Abstractions;
 namespace Vertical_Slice_Clean_Architecture.Domain.Entities;
 
 /// <summary>
-/// Example domain entity used by the <c>Sample</c> feature slices to show how an entity
-/// moves from the domain layer, through persistence, to the API.
+/// Example domain entity used by the <c>Sample</c> feature slices to show how an entity moves from
+/// the domain layer, through persistence, to the API.
 /// </summary>
 /// <remarks>
+/// <para>
+/// State changes only through the entity's own members (<see cref="Create"/>, <see cref="Deactivate"/>),
+/// so it can never hold invalid values. The API never exposes it directly: slices accept and return
+/// their own request and response types.
+/// </para>
+/// <para>
 /// Replace or rename this type when you build real features from the template.
+/// </para>
 /// </remarks>
-public sealed record SampleEntity : IEntity
+public sealed class SampleEntity : Entity
 {
     /// <summary>
-    /// Gets or sets the unique identifier of the sample. The caller supplies it; the database does not generate it.
+    /// The maximum length of <see cref="Name"/>, shared by the database mapping and request validation.
     /// </summary>
-    public Guid Id { get; set; }
+    public const int NameMaxLength = 200;
 
     /// <summary>
-    /// Gets or sets the display name of the sample.
+    /// The maximum length of <see cref="Email"/> (the longest valid email address), shared by the
+    /// database mapping and request validation.
     /// </summary>
-    public required string Name { get; set; }
+    public const int EmailMaxLength = 320;
 
     /// <summary>
-    /// Gets or sets the email address associated with the sample.
+    /// Used by EF Core and Dapper to materialize rows. Application code uses <see cref="Create"/>.
     /// </summary>
-    public required string Email { get; set; }
+    private SampleEntity()
+    {
+    }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the sample is active. Defaults to <see langword="true"/>.
+    /// Gets the display name of the sample.
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public string Name { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the email address of the sample. It is unique across all samples.
+    /// </summary>
+    public string Email { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether the sample is active. New samples are active.
+    /// </summary>
+    public bool IsActive { get; private set; }
+
+    /// <summary>
+    /// Creates a new, active sample with a new time-ordered identifier (UUID version 7, which keeps
+    /// primary-key inserts sequential).
+    /// </summary>
+    /// <param name="name">The display name, at most <see cref="NameMaxLength"/> characters.</param>
+    /// <param name="email">The email address, at most <see cref="EmailMaxLength"/> characters.</param>
+    /// <returns>The new sample.</returns>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="name"/> or <paramref name="email"/> is null, empty, whitespace, or too long.
+    /// </exception>
+    public static SampleEntity Create(string name, string email)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(name.Length, NameMaxLength, nameof(name));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(email.Length, EmailMaxLength, nameof(email));
+
+        return new SampleEntity
+        {
+            Id = Guid.CreateVersion7(),
+            Name = name,
+            Email = email,
+            IsActive = true,
+        };
+    }
+
+    /// <summary>
+    /// Marks the sample as inactive.
+    /// </summary>
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
 }

@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 
 namespace Vertical_Slice_Clean_Architecture.Presentation.API.Common;
@@ -80,9 +81,13 @@ public static class SliceRegistration
     /// <remarks>Call this after the application is built and after <see cref="AddSlices"/> has run.</remarks>
     public static IEndpointRouteBuilder MapSlices(this IEndpointRouteBuilder app)
     {
+        // One route group with no prefix, so filters that apply to every slice are added once here.
+        var slices = app.MapGroup(string.Empty)
+            .AddEndpointFilter<ProblemDetailsFilter>();
+
         foreach (var endpoint in app.ServiceProvider.GetServices<IEndpoint>())
         {
-            endpoint.MapEndpoint(app);
+            endpoint.MapEndpoint(slices);
         }
 
         return app;
@@ -137,6 +142,45 @@ public sealed class ValidationFilter<TRequest> : IEndpointFilter
         return result.IsValid
             ? await next(context)
             : TypedResults.ValidationProblem(result.ToDictionary());
+    }
+}
+
+/// <summary>
+/// Endpoint filter, applied to every slice by <see cref="SliceRegistration.MapSlices"/>, that runs the
+/// application's <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> on problem bodies a slice
+/// returns itself (for example <see cref="Problems.Conflict"/>).
+/// </summary>
+/// <remarks>
+/// ASP.NET Core applies <see cref="ProblemDetailsOptions.CustomizeProblemDetails"/> only to bodies
+/// written through <see cref="IProblemDetailsService"/> (unhandled exceptions, validation problems,
+/// empty error status codes). A typed result such as <c>Conflict&lt;ProblemDetails&gt;</c> is serialized
+/// directly, so without this filter it would miss members such as <c>correlationId</c>.
+/// </remarks>
+public sealed class ProblemDetailsFilter : IEndpointFilter
+{
+    /// <summary>
+    /// Runs the slice, then customizes the <see cref="ProblemDetails"/> in its result, if any.
+    /// </summary>
+    /// <param name="context">The filter context, which holds the current <see cref="HttpContext"/>.</param>
+    /// <param name="next">The next filter, or the route handler itself.</param>
+    /// <returns>The slice's result, unchanged apart from its problem body.</returns>
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        var result = await next(context);
+
+        // Slices return Results<...> unions; the problem body is on the result inside them.
+        var inner = result is INestedHttpResult nested ? nested.Result : result;
+        if (inner is IValueHttpResult { Value: ProblemDetails problemDetails })
+        {
+            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<ProblemDetailsOptions>>().Value;
+            options.CustomizeProblemDetails?.Invoke(new ProblemDetailsContext
+            {
+                HttpContext = context.HttpContext,
+                ProblemDetails = problemDetails,
+            });
+        }
+
+        return result;
     }
 }
 

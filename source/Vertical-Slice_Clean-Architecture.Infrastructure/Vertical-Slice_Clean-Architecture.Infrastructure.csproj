@@ -7,12 +7,53 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!--#if (false) -->
+  <!--
+    Template source only: a generated solution keeps just the data access (EF Core or Dapper) and
+    database engine it was created with. The template source references all of them so that every
+    combination builds from source/ (see TemplateDataAccess and TemplateDatabase in Directory.Build.props).
+    MySqlConnector stays on 2.6.x to match the version Microting.EntityFrameworkCore.MySql depends on.
+  -->
+  <!--#endif -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.15" />
+    <!--#if (HasEfCore) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.15" />
+    <!--#endif -->
+    <!--#if (HasEfCore && HasSqlServer) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.15" />
+    <!--#endif -->
+    <!--#if (HasEfCore && HasPostgreSql) -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!--#endif -->
+    <!--#if (HasEfCore && HasMySql) -->
+    <!-- The EF Core 10 continuation of Pomelo.EntityFrameworkCore.MySql, built on MySqlConnector. -->
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.14" />
+    <!--#endif -->
+    <!--#if (HasDapper) -->
+    <PackageReference Include="Dapper" Version="2.1.89" />
+    <!--#endif -->
+    <!--#if (HasDapper && HasSqlServer) -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.2" />
+    <!--#endif -->
+    <!--#if (HasDapper && HasPostgreSql) -->
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <!--#endif -->
+    <!--#if (HasDapper && HasMySql) -->
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <!--#endif -->
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Vertical-Slice_Clean-Architecture.Domain\Vertical-Slice_Clean-Architecture.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets the tests reach internal types such as DatabaseHealthCheck. -->
+    <InternalsVisibleTo Include="Vertical-Slice_Clean-Architecture.Tests" />
   </ItemGroup>
 
 </Project>

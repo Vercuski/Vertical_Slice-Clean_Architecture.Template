@@ -49,6 +49,31 @@
     <!--Enabled Dynamic Compile Flags from CI-->
     <DefineConstants Condition=" '$(CompileFlags)' != '' ">$(CompileFlags);$(DefineConstants)</DefineConstants>
   </PropertyGroup>
+  <!--#if (false) -->
+  <!--
+    Template source only: this block is removed from generated solutions.
+
+    The template's DataAccess and Database options are written as C# preprocessor blocks named after
+    the template's computed symbols, e.g. #if (HasDapper). `dotnet new` evaluates and strips those
+    blocks; here the same names are compile constants, so the template source builds as any one
+    combination. The default is EF Core on SQL Server:
+
+      dotnet build source/Vertical-Slice_Clean-Architecture.slnx -p:TemplateDataAccess=Dapper -p:TemplateDatabase=PostgreSql
+
+    TemplateDataAccess: EfCore | Dapper        TemplateDatabase: SqlServer | PostgreSql | MySql
+  -->
+  <PropertyGroup>
+    <TemplateDataAccess Condition="'$(TemplateDataAccess)' == ''">EfCore</TemplateDataAccess>
+    <TemplateDatabase Condition="'$(TemplateDatabase)' == ''">SqlServer</TemplateDatabase>
+    <DefineConstants>$(DefineConstants);Has$(TemplateDataAccess);Has$(TemplateDatabase)</DefineConstants>
+  </PropertyGroup>
+  <Target Name="ValidateTemplateOptions" BeforeTargets="CoreCompile">
+    <Error Condition="'$(TemplateDataAccess)' != 'EfCore' And '$(TemplateDataAccess)' != 'Dapper'"
+           Text="TemplateDataAccess must be EfCore or Dapper (was '$(TemplateDataAccess)')." />
+    <Error Condition="'$(TemplateDatabase)' != 'SqlServer' And '$(TemplateDatabase)' != 'PostgreSql' And '$(TemplateDatabase)' != 'MySql'"
+           Text="TemplateDatabase must be SqlServer, PostgreSql or MySql (was '$(TemplateDatabase)')." />
+  </Target>
+  <!--#endif -->
   <ItemGroup>
     <!-- included in assembly meta to access via reflection -->
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="$(ProjectKey) != ''">
