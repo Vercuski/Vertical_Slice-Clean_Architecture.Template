@@ -90,8 +90,9 @@ dotnet new vsca --help                                                        # 
      ```
    - *Dapper:* create the tables yourself. The `Samples` table the sample slices use is in
      `MyCompany.MyProduct.Tests/Support/TestDatabase.cs` (`DapperSchema`) for each engine.
-3. **Run** the API project and open the `.http` file next to it to call the sample endpoints. In
-   Development the OpenAPI document is at `/openapi/v1.json`.
+3. **Run** the API project; in Development the browser opens the [Scalar](https://scalar.com) API
+   reference at `/scalar`, where every slice can be browsed and called. The OpenAPI document it reads
+   is at `/openapi/v1.json`. The `.http` file next to the project calls the sample endpoints too.
 
 ### Adding a feature
 

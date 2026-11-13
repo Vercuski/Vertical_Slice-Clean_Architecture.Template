@@ -3,6 +3,7 @@
 // services the slices use); AddSlices / MapSlices discover and map every feature slice.
 
 using System.Text.Json.Serialization;
+using Scalar.AspNetCore;
 using Vertical_Slice_Clean_Architecture.Infrastructure;
 using Vertical_Slice_Clean_Architecture.Presentation.API.Common;
 
@@ -23,10 +24,14 @@ builder.Services.AddSlices(typeof(Program).Assembly);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// The OpenAPI document (/openapi/v1.json) is only exposed in the Development environment.
+// The OpenAPI document (/openapi/v1.json) and the Scalar API reference UI (/scalar) are only
+// exposed in the Development environment.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options => options
+        .WithTitle("Vertical-Slice_Clean-Architecture API")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient));
 }
 
 // The correlation ID middleware runs first, so error responses and every log entry carry the ID.

@@ -170,6 +170,22 @@ public class HostTests
     }
 
     /// <summary>
+    /// The Scalar API reference UI is served in Development.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task Scalar_Should_ServeTheApiReference()
+    {
+        var response = await _client.GetAsync("/scalar");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(response.Content.Headers.ContentType?.MediaType, Is.EqualTo("text/html"));
+        }
+    }
+
+    /// <summary>
     /// Reads the single correlation ID header of a response.
     /// </summary>
     /// <param name="response">The response.</param>
