@@ -9,7 +9,8 @@
     Drop_and_Recreate_Template.ps1 (repository root) runs this uninstall / pack / install cycle locally.
 
     The package version comes from MinVer, configured in source/Directory.Build.props and imported
-    through template/Directory.Build.props, so the template and the solution share one Semantic Version.
+    through template/Directory.Build.props, so the template is versioned from the same git tags as the
+    solution. The UseReleasePackageVersion target below then packs it without a pre-release suffix.
   -->
 
   <PropertyGroup>
@@ -45,5 +46,32 @@
     <None Include="..\README.md" Pack="true" PackagePath="\" Visible="false" />
     <Compile Remove="**\*" />
   </ItemGroup>
+
+  <!--
+    The template package is never versioned with a pre-release suffix such as -alpha.0.3. Instead, the
+    commit height becomes a fourth version number on top of the last release tag, so every commit packs
+    a unique version that still sorts below the next release:
+      * A commit tagged v1.4.0 packs as 1.4.0.
+      * The 3rd commit after that tag packs as 1.4.0.3 (MinVer calculates 1.4.1-alpha.0.3), which sorts
+        after 1.4.0 and before the next release, 1.4.1.
+      * With no tags at all, the 3rd commit packs as 0.0.0.3 (MinVer: 0.0.0-alpha.0.3).
+      * Anything else, such as a pre-release tag (v1.5.0-rc.1), packs as Major.Minor.Patch (1.5.0).
+    MinVer bumps the patch for commits after a release tag (but not when there is no tag, where the
+    patch is already 0), so the patch is decremented back to the tagged release's.
+    Solutions generated from the template are unaffected and keep MinVer's normal pre-release versions.
+  -->
+
+  <Target Name="UseReleasePackageVersion" AfterTargets="MinVer">
+    <PropertyGroup>
+      <_MinVerHeightPrefix>alpha.0.</_MinVerHeightPrefix>
+      <_IsHeightBuild>false</_IsHeightBuild>
+      <_IsHeightBuild Condition="$(MinVerPreRelease.StartsWith('$(_MinVerHeightPrefix)'))">true</_IsHeightBuild>
+      <_ReleasePatch>$(MinVerPatch)</_ReleasePatch>
+      <_ReleasePatch Condition="'$(_IsHeightBuild)' == 'true' And $(MinVerPatch) &gt; 0">$([MSBuild]::Subtract($(MinVerPatch), 1))</_ReleasePatch>
+      <Version>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch)</Version>
+      <Version Condition="'$(_IsHeightBuild)' == 'true'">$(MinVerMajor).$(MinVerMinor).$(_ReleasePatch).$(MinVerPreRelease.Substring($(_MinVerHeightPrefix.Length)))</Version>
+      <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
+  </Target>
 
 </Project>

@@ -2,9 +2,9 @@
   <!--
     The template package project lives outside source/, so MSBuild would not find
     source/Directory.Build.props on its own. Importing it here gives the package the same MinVer
-    configuration (tag prefix, minimum major.minor) as the solution it packs, so the template's
-    version always matches the solution's Semantic Version. Versioning is configured only in
-    source/Directory.Build.props.
+    configuration (tag prefix) as the solution it packs, so the template's version comes from the
+    same git tags as the solution's. Versioning is configured only in source/Directory.Build.props;
+    the package project then replaces the pre-release suffix (see UseReleasePackageVersion in the .csproj).
   -->
   <Import Project="$(MSBuildThisFileDirectory)..\source\Directory.Build.props" />
 </Project>

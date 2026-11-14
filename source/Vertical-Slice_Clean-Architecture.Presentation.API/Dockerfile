@@ -17,8 +17,8 @@ ARG BUILD_CONFIGURATION=Release
 # can't calculate the version from tags here; CI passes it in with
 #   docker build --build-arg APP_VERSION=1.4.0 ...
 # MSBuild reads environment variables as properties, so this becomes MinVerVersionOverride for
-# both the build and publish stages. If it's omitted, MinVer falls back to
-# {MinVerMinimumMajorMinor}.0-alpha.0 (2.0.0-alpha.0); see source/Directory.Build.props.
+# both the build and publish stages. If it's omitted, MinVer falls back to 0.0.0-alpha.0;
+# see source/Directory.Build.props.
 ARG APP_VERSION=
 ENV MinVerVersionOverride=${APP_VERSION}
 WORKDIR /src

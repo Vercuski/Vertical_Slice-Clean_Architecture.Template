@@ -17,7 +17,7 @@
         of commits since the tag, so every build has a unique, correctly ordered version.
       * A pre-release tag such as v1.5.0-rc.1 builds as 1.5.0-rc.1, and commits after it
         build as 1.5.0-rc.1.{height}.
-      * With no tags at all, versions start from MinVerMinimumMajorMinor (2.0.0-alpha.0.{height}).
+      * With no tags at all, versions start from 0.0.0-alpha.0.{height}.
 
     MinVer sets Version and PackageVersion to the full SemVer 2.0 version,
     InformationalVersion to the same plus build metadata (the .NET SDK appends the commit SHA),
@@ -25,11 +25,10 @@
     redirects only change on breaking releases.
 
     Builds without git history (e.g. Docker builds, whose context excludes .git) should pass
-    the version explicitly: -p:MinVerVersionOverride=1.4.0 (see the Dockerfiles and README).
+    the version explicitly: -p:MinVerVersionOverride=1.4.0, or APP_VERSION for the Dockerfile (see the README).
   -->
   <PropertyGroup>
     <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerMinimumMajorMinor>2.0</MinVerMinimumMajorMinor>
     <MinVerDefaultPreReleaseIdentifiers></MinVerDefaultPreReleaseIdentifiers>
   </PropertyGroup>
   <ItemGroup>
@@ -40,7 +39,7 @@
     TreatWarningsAsErrors would turn into a failed build. That is the normal state of a solution
     freshly generated from the template, before `git init`. When no .git exists at the solution root
     or one level up (the repo layout, where the solution lives in source/), the warning is demoted to
-    a message and the version falls back to {MinVerMinimumMajorMinor}.0-alpha.0 (2.0.0-alpha.0). Once .git exists, the warning is active again.
+    a message and the version falls back to 0.0.0-alpha.0. Once .git exists, the warning is active again.
   -->
   <PropertyGroup Condition="!Exists('$(MSBuildThisFileDirectory).git') And !Exists('$(MSBuildThisFileDirectory)../.git')">
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MINVER1001</MSBuildWarningsAsMessages>

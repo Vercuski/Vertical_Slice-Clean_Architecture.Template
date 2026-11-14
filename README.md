@@ -136,10 +136,16 @@ and in `source/`, the JSON is valid, it builds with zero warnings, and its tests
 ### Versioning and releases
 
 Versions follow [Semantic Versioning](https://semver.org) and come entirely from git tags: a commit tagged
-`v1.4.0` builds as `1.4.0`, later commits build as `1.4.1-alpha.0.<height>`. After a green build on `main`, the
+`v1.4.0` builds as `1.4.0`, later commits build as `1.4.1-alpha.0.<height>`; with no tags at all, builds start at
+`0.0.0-alpha.0.<height>`. The template *package* is the exception: it never carries a pre-release suffix. A tagged commit packs as
+`Major.Minor.Patch`, and later commits add the commit height as a fourth number on top of the last release
+(the 3rd commit after `v1.4.0` packs as `1.4.0.3`), so every commit's package is unique and sorts before the next release. After a green build on `main`, the
 release job asks Claude to classify the changes since the last tag as major, minor, patch or none and pushes the
 next `v*` tag, which builds the release. It needs the `ANTHROPIC_API_KEY` and `RELEASE_BOT_TOKEN` repository
 secrets; see the comments at the top of `build.yml`.
+
+Docker builds have no git history, so pass the version in: `docker build source -f <API project>/Dockerfile
+--build-arg APP_VERSION=1.4.0` (it becomes `MinVerVersionOverride`). Without it the image is versioned `0.0.0-alpha.0`.
 
 ## License
 
