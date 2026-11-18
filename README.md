@@ -16,6 +16,8 @@ A generated solution contains only the code and packages for the choices you mad
 
 ## What you get
 
+![Vertical Slice + Clean Architecture: Presentation.API slices depend on Infrastructure and Domain; Infrastructure depends on Domain](documentation/images/vsca-architecture.svg)
+
 ```
 MyCompany.MyProduct/
 ├─ MyCompany.MyProduct.Domain/            Entities and domain abstractions. No dependencies.
