@@ -1,3 +1,5 @@
+Check out <a href="https://scott.vercuski.com" target="_blank" rel="noopener noreferrer">https://scott.vercuski.com</a> for more projects and solution/software architecture knowledge.
+
 # Vertical Slice + Clean Architecture Template
 
 [![NuGet](https://img.shields.io/nuget/v/Vercuski.Vertical_Slice-Clean_Architecture.Templates.svg)](https://www.nuget.org/packages/Vercuski.Vertical_Slice-Clean_Architecture.Templates)
