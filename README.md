@@ -1,5 +1,7 @@
 # Vertical Slice + Clean Architecture Template
 
+[![NuGet](https://img.shields.io/nuget/v/Vercuski.Vertical_Slice-Clean_Architecture.Templates.svg)](https://www.nuget.org/packages/Vercuski.Vertical_Slice-Clean_Architecture.Templates)
+
 A `dotnet new` / Visual Studio template for a .NET 10 Minimal API that organizes features as
 **vertical slices** on top of **Clean Architecture** layers. Each use case lives in one file — its
 request, response, validator, handler and endpoint — while the domain model and the infrastructure
@@ -51,7 +53,14 @@ MyCompany.MyProduct/
 
 ## Install
 
-The package is not published to NuGet yet. Build it from this repository (requires the .NET 10 SDK):
+The template is published on NuGet as
+[Vercuski.Vertical_Slice-Clean_Architecture.Templates](https://www.nuget.org/packages/Vercuski.Vertical_Slice-Clean_Architecture.Templates). Install it with the .NET 10 SDK:
+
+```powershell
+dotnet new install Vercuski.Vertical_Slice-Clean_Architecture.Templates
+```
+
+To build and install it from this repository instead:
 
 ```powershell
 dotnet pack template/Vercuski.Vertical_Slice-Clean_Architecture.Templates.csproj -c Release -o artifacts
