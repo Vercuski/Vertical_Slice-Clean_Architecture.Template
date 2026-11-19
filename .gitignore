@@ -398,3 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 /source/.sonarqube
 *.patch
+/.sonarqube
+/SonarqubeAnalysis.bat

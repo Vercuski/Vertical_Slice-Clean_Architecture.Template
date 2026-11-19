@@ -43,4 +43,4 @@ app.UseHttpsRedirection();
 
 app.MapSlices();
 
-app.Run();
+await app.RunAsync();

@@ -81,6 +81,6 @@ public class HealthCheckConfiguration
         }
 
         return context.Response.WriteAsync(
-            Encoding.UTF8.GetString(memoryStream.ToArray()));
+            Encoding.UTF8.GetString(memoryStream.ToArray()), context.RequestAborted);
     }
 }

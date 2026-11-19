@@ -129,7 +129,7 @@ public class HostTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
-            Assert.That(problem.GetProperty("errors").EnumerateObject().Select(e => e.Name), Is.EquivalentTo(new[] { "Name", "Email" }));
+            Assert.That(problem.GetProperty("errors").EnumerateObject().Select(e => e.Name), Is.EquivalentTo(["Name", "Email"]));
             Assert.That(problem.GetProperty("correlationId").GetString(), Is.EqualTo(CorrelationIdOf(response)));
         }
     }
@@ -166,7 +166,7 @@ public class HostTests
         var document = await _client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
         var paths = document.GetProperty("paths").EnumerateObject().Select(p => p.Name);
 
-        Assert.That(paths, Is.SupersetOf(new[] { "/Sample", "/Sample/{Id}" }));
+        Assert.That(paths, Is.SupersetOf(["/Sample", "/Sample/{Id}"]));
     }
 
     /// <summary>

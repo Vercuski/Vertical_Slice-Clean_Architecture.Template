@@ -41,7 +41,7 @@ public class PostSampleValidatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsValid, Is.False);
-            Assert.That(result.Errors.Select(e => e.PropertyName), Is.EquivalentTo(new[] { invalidProperty }));
+            Assert.That(result.Errors.Select(e => e.PropertyName), Is.EquivalentTo([invalidProperty]));
         }
     }
 
@@ -58,6 +58,6 @@ public class PostSampleValidatorTests
 
         Assert.That(
             result.Errors.Select(e => e.PropertyName).Distinct(),
-            Is.EquivalentTo(new[] { nameof(PostSample.Command.Name), nameof(PostSample.Command.Email) }));
+            Is.EquivalentTo([nameof(PostSample.Command.Name), nameof(PostSample.Command.Email)]));
     }
 }
