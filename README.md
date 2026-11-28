@@ -35,7 +35,7 @@ MyCompany.MyProduct/
   `MapSlices` maps them. Adding a feature never touches `Program.cs`. Requests and responses are the
   slice's own types, so domain entities never become the HTTP contract.
 - **Persistence with a read/write split.** EF Core gets an `IQueryDbContext` that can only query
-  (no tracking) and an `ICommandDbContext` that can add, update, remove and save but not query; Dapper gets read and write connection factories. Each side has its own connection
+  (no tracking) and an `ICommandDbContext` that can add, update, remove, save, bulk-write and truncate but not query; Dapper gets read and write connection factories. Each side has its own connection
   string (`ConnectionStrings:QueryDbConnection`, `ConnectionStrings:CommandDbConnection`), validated at
   startup, so the read side can point at a replica.
 - **Errors.** RFC 9457 `ProblemDetails` for validation failures, conflicts, not-found and unhandled
@@ -117,6 +117,20 @@ response, optional `Validator`, a `Handler` implementing `ISliceHandler`, and an
 With EF Core, a new entity needs only its `IEntityTypeConfiguration` in the Infrastructure project's
 `Persistence/Configurations` folder. Slices read it with `IQueryDbContext.Set<TEntity>()` and write it with
 `ICommandDbContext.Set<TEntity>()`; the contexts themselves don't change.
+
+For large batches, `ICommandDbContext` also has bulk operations from
+[EFCore.BulkExtensions](https://github.com/borisdj/EFCore.BulkExtensions): `BulkInsertAsync`, `BulkUpdateAsync`,
+`BulkInsertOrUpdateAsync`, `BulkDeleteAsync`, `BulkSaveChangesAsync`, `BulkInsertOrUpdateOrDeleteAsync`
+(SQL Server only) and `TruncateAsync<TEntity>()`, which empties the entity's table. Bulk operations bypass the
+change tracker and commit on their own unless they run inside `BeginTransactionAsync`. `TruncateAsync` lets
+database errors through (for example, a table another table's foreign key references), and on MySQL it can't be
+rolled back. On MySQL, bulk inserts use `MySqlBulkCopy`, so the command connection string needs
+`AllowLoadLocalInfile=true` and the server needs `local_infile=ON`. `BulkDeleteAsync` there deletes by primary key
+without EFCore.BulkExtensions, because the library's MySQL delete fails on tables with another unique index.
+
+EFCore.BulkExtensions is dual-licensed: it is free for individuals, companies with less than USD 1 million in annual
+gross revenue, non-profits and open-source projects; everyone else needs a
+[commercial license](https://github.com/borisdj/EFCore.BulkExtensions/blob/master/LICENSE.txt).
 
 ## Tests
 

@@ -125,10 +125,19 @@ internal sealed class TestDatabase : IAsyncDisposable
         var container = new PostgreSqlBuilder("postgres:17-alpine").Build();
 #else
         // 8.4 matches Database:MySqlServerVersion in appsettings.json.
+#if (HasEfCore)
+        // EF Core bulk inserts use MySqlBulkCopy (LOAD DATA LOCAL INFILE), which the server must allow.
+        var container = new MySqlBuilder("mysql:8.4").WithCommand("--local-infile=1").Build();
+#else
         var container = new MySqlBuilder("mysql:8.4").Build();
 #endif
+#endif
         await container.StartAsync();
+#if (HasMySql && HasEfCore)
+        return new TestDatabase($"{container.GetConnectionString()};AllowLoadLocalInfile=true", container);
+#else
         return new TestDatabase(container.GetConnectionString(), container);
+#endif
     }
 
     /// <summary>

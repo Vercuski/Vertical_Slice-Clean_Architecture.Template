@@ -29,6 +29,22 @@
     <!-- The EF Core 10 continuation of Pomelo.EntityFrameworkCore.MySql, built on MySqlConnector. -->
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.14" />
     <!--#endif -->
+    <!--#if (HasEfCore && HasSqlServer) -->
+    <!--
+      Bulk operations on the command context (ICommandDbContext.BulkInsertAsync, TruncateAsync, ...).
+      EFCore.BulkExtensions is dual-licensed: free for individuals, companies under 1 million USD in
+      annual gross revenue, non-profits and open-source projects; everyone else needs a commercial license.
+      See https://github.com/borisdj/EFCore.BulkExtensions/blob/master/LICENSE.txt. Stay on 10.x for EF Core 10.
+    -->
+    <PackageReference Include="EFCore.BulkExtensions.SqlServer" Version="10.0.2" />
+    <!--#endif -->
+    <!--#if (HasEfCore && HasPostgreSql) -->
+    <PackageReference Include="EFCore.BulkExtensions.PostgreSql" Version="10.0.2" />
+    <!--#endif -->
+    <!--#if (HasEfCore && HasMySql) -->
+    <!-- Built on the same Microting MySQL provider as above. Bulk inserts need AllowLoadLocalInfile (see the README). -->
+    <PackageReference Include="EFCore.BulkExtensions.MySql" Version="10.0.2" />
+    <!--#endif -->
     <!--#if (HasDapper) -->
     <PackageReference Include="Dapper" Version="2.1.89" />
     <!--#endif -->
