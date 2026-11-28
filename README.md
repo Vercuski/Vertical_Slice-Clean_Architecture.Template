@@ -34,8 +34,8 @@ MyCompany.MyProduct/
 - **Vertical slices.** `AddSlices` discovers every handler, endpoint and FluentValidation validator;
   `MapSlices` maps them. Adding a feature never touches `Program.cs`. Requests and responses are the
   slice's own types, so domain entities never become the HTTP contract.
-- **Persistence with a read/write split.** EF Core gets a `QueryDbContext` (no tracking) and a
-  `CommandDbContext`; Dapper gets read and write connection factories. Each side has its own connection
+- **Persistence with a read/write split.** EF Core gets an `IQueryDbContext` that can only query
+  (no tracking) and an `ICommandDbContext` that can add, update, remove and save but not query; Dapper gets read and write connection factories. Each side has its own connection
   string (`ConnectionStrings:QueryDbConnection`, `ConnectionStrings:CommandDbConnection`), validated at
   startup, so the read side can point at a replica.
 - **Errors.** RFC 9457 `ProblemDetails` for validation failures, conflicts, not-found and unhandled
@@ -113,6 +113,10 @@ Create `Features/<Feature>/<UseCase>.cs` in the API project with a static class 
 response, optional `Validator`, a `Handler` implementing `ISliceHandler`, and an `Endpoint` implementing
 `IEndpoint`. Use `GetSample` (read side) and `PostSample` (write side) as the pattern. Shared code goes in
 `Common`, the Domain or Infrastructure; the architecture tests fail if one feature uses another's types.
+
+With EF Core, a new entity needs only its `IEntityTypeConfiguration` in the Infrastructure project's
+`Persistence/Configurations` folder. Slices read it with `IQueryDbContext.Set<TEntity>()` and write it with
+`ICommandDbContext.Set<TEntity>()`; the contexts themselves don't change.
 
 ## Tests
 

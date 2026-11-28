@@ -117,10 +117,12 @@ public static class PostSample
     }
 #else
     /// <summary>
-    /// Adds the sample through <see cref="CommandDbContext"/>.
+    /// Checks the email through <see cref="IQueryDbContext"/> and adds the sample through
+    /// <see cref="ICommandDbContext"/>, which cannot query.
     /// </summary>
-    /// <param name="db">The write-side database context.</param>
-    public sealed class Handler(CommandDbContext db) : ISliceHandler
+    /// <param name="queryDb">The read-side database context.</param>
+    /// <param name="commandDb">The write-side database context.</param>
+    public sealed class Handler(IQueryDbContext queryDb, ICommandDbContext commandDb) : ISliceHandler
     {
         /// <summary>
         /// Creates the sample unless its email address is already in use.
@@ -132,21 +134,22 @@ public static class PostSample
         /// with a problem body if another sample already has the email address.
         /// </returns>
         /// <remarks>
-        /// Two requests racing with the same email can both pass the check; the unique index on
-        /// <c>Email</c> then rejects the second save.
+        /// The check reads from the query database. When that is a replica it can lag behind the command
+        /// database, and two requests racing with the same email can both pass it; in either case the
+        /// unique index on <c>Email</c> rejects the second save.
         /// </remarks>
         public async Task<Results<Created<Response>, Conflict<ProblemDetails>>> Handle(
             Command command,
             CancellationToken cancellationToken)
         {
-            if (await db.Samples.AnyAsync(s => s.Email == command.Email, cancellationToken))
+            if (await queryDb.Set<SampleEntity>().AnyAsync(s => s.Email == command.Email, cancellationToken))
             {
                 return Problems.Conflict("Email already in use", $"Another sample already uses {command.Email}.");
             }
 
             var sample = SampleEntity.Create(command.Name, command.Email);
-            db.Samples.Add(sample);
-            await db.SaveChangesAsync(cancellationToken);
+            commandDb.Set<SampleEntity>().Add(sample);
+            await commandDb.SaveChangesAsync(cancellationToken);
 
             return TypedResults.Created($"/Sample/{sample.Id}", new Response(sample.Id));
         }

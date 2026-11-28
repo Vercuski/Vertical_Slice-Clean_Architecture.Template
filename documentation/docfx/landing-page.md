@@ -21,8 +21,8 @@ created with Dapper.
    `400` validation problem response on failure.
 5. Errors are RFC 9457 `ProblemDetails` responses, built through the `Problems` helpers, and every
    one carries the request's `correlationId`.
-6. Reads go through the query side (`QueryDbContext`, no tracking) and writes through the command
-   side (`CommandDbContext`), which can point at different databases.
+6. Reads go through the query side (`IQueryDbContext`, query only, no tracking) and writes through the
+   command side (`ICommandDbContext`, which cannot query); the two can point at different databases.
 
 ## API reference
 

@@ -72,10 +72,10 @@ public static class GetSample
     }
 #else
     /// <summary>
-    /// Runs the query against <see cref="QueryDbContext"/>.
+    /// Runs the query against <see cref="IQueryDbContext"/>.
     /// </summary>
     /// <param name="db">The read-side database context.</param>
-    public sealed class Handler(QueryDbContext db) : ISliceHandler
+    public sealed class Handler(IQueryDbContext db) : ISliceHandler
     {
         /// <summary>
         /// Looks up the sample with the requested identifier, selecting only the columns the response needs.
@@ -85,7 +85,7 @@ public static class GetSample
         /// <returns><c>200 OK</c> with a <see cref="Response"/> if the sample exists; otherwise <c>404 Not Found</c>.</returns>
         public async Task<Results<Ok<Response>, NotFound>> Handle(Query query, CancellationToken cancellationToken)
         {
-            var response = await db.Samples
+            var response = await db.Set<SampleEntity>()
                 .Where(s => s.Id == query.Id)
                 .Select(s => new Response(s.Id, s.Name, s.Email, s.IsActive))
                 .SingleOrDefaultAsync(cancellationToken);

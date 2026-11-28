@@ -25,7 +25,7 @@ namespace Vertical_Slice_Clean_Architecture.Infrastructure.Persistence;
 /// Called by <c>AddInfrastructureRegistration()</c>. The slices resolve:
 /// <list type="bullet">
 #if (HasEfCore)
-///   <item><description><see cref="QueryDbContext"/> for reads (no tracking) and <see cref="CommandDbContext"/> for writes.</description></item>
+///   <item><description><see cref="IQueryDbContext"/> for reads (query only, no tracking) and <see cref="ICommandDbContext"/> for writes (no queries).</description></item>
 #endif
 #if (HasDapper)
 ///   <item><description><see cref="IDbReadOnlyConnectionFactory"/> for reads and <see cref="IDbWriteConnectionFactory"/> for writes.</description></item>
@@ -67,6 +67,11 @@ internal static class PersistenceRegistration
             ConfigureDbContext(builder, serviceProvider, options, databaseProvider, connectionStrings => connectionStrings.CommandDbConnection));
         builder.Services.AddDbContext<QueryDbContext>((serviceProvider, options) =>
             ConfigureDbContext(builder, serviceProvider, options, databaseProvider, connectionStrings => connectionStrings.QueryDbConnection));
+
+        // Slices depend on these interfaces; the concrete contexts are internal, so a slice cannot
+        // query through the command side or write through the query side.
+        builder.Services.AddScoped<ICommandDbContext>(serviceProvider => serviceProvider.GetRequiredService<CommandDbContext>());
+        builder.Services.AddScoped<IQueryDbContext>(serviceProvider => serviceProvider.GetRequiredService<QueryDbContext>());
 #endif
 #if (HasDapper)
 
